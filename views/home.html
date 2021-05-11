@@ -1,0 +1,14 @@
+<div class="container">
+    <h1 class="mt-5" style="text-align: center;">Hello from Beego Web Framework!</h1>
+    <h5 class="mt-4">Simple Addition</h5>
+    <form action="/" method="get">
+        <label for="args1">Number 1</label>
+        <input type="text" name="args1" id="args1">
+        <label for="args1">Number 2</label>
+        <input type="text" name="args2" id="args2">
+        <button type="submit" >Calculate</button>
+    </form>
+    {{if .Result}}
+        <h5>The result is {{.Result}}</h5>
+    {{end}}
+</div>
