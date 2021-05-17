@@ -1,5 +1,5 @@
 <div class="container">
-    <h1 class="mt-5" style="text-align: center;">User Profiles</h1>
+    <h1 class="mt-5 mb-3" style="text-align: center;">User Profiles</h1>
     {{if .ErrMessages}}
     <div class="alert alert-danger" role="alert">
         <ul>
@@ -13,13 +13,16 @@
         {{.SuccessMessage}}
     </div>
     {{end}}
-    <form action="{{urlfor "ProfileController.AddProfile"}}" method="post" novalidate>
-        {{.xsrfdata}}
+    <form action="{{urlfor "ProfileController.AddProfile"}}" method="post" class="needs-validation" novalidate>
+        {{$.Xsrfdata}}
         <div class="col-md-4">
             <label for="name" class="form-label">Fullname</label>
             <input name="name" type="text" class="form-control" id="name" value="" required>
             <div class="valid-feedback">
                 Looks good!
+            </div>
+            <div class="invalid-feedback">
+                Please enter your fullname!
             </div>
         </div>
         <div class="col-md-4">
@@ -28,6 +31,9 @@
             <div class="valid-feedback">
                 Looks good!
             </div>
+            <div class="invalid-feedback">
+                Please enter your age!
+            </div>
         </div>
         <input type="submit" class="mt-2 btn btn-primary" value="Submit">
     </form>
@@ -35,7 +41,7 @@
     {{if .Results}}
     <ol class="mt-4">
         {{range .Results}}
-        <li>
+        <li class="mb-2">
             <ul>
                 <li>Fullname: {{.Name}}</li>
                 <li>Age: {{.Age}}</li>
@@ -43,10 +49,15 @@
                 {{if .Hobbies}}
                 <ul>
                     {{range .Hobbies}}
-                    <li>{{.Hobby}}</li>
+                    <li>{{.Hobby}} -- <a href="{{urlfor "ProfileControler.DeleteHobby" ":idHobby" .ID}}">Delete This</a></li>
                     {{end}}
                 </ul>
                 {{end}}
+                <a href="{{urlfor "ProfileController.AddHobby" ":idProfile" .ID}}" class="mb-2 btn btn-primary">Add Hobby</a>
+                <form action="{{urlfor "ProfileController.DeleteProfile" ":idProfile" .ID}}" method="post">
+                    {{$.Xsrfdata}}
+                    <input type="submit" name="deleteProfile" id="deleteProfile" class="btn btn-danger" value="Delete Profile">
+                </form>
             </ul>
         </li>
         {{end}}
@@ -55,3 +66,26 @@
     <h5>There is no profile registered yet.</h5>
     {{end}}
 </div>
+
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+    'use strict'
+
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+        }, false)
+        })
+    })()
+</script>
