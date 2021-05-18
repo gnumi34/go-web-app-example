@@ -8,7 +8,7 @@ type Profile struct {
 	gorm.Model
 	Name    string
 	Age     int
-	Hobbies []Hobby
+	Hobbies []Hobby `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type Hobby struct {

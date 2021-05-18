@@ -16,3 +16,6 @@ test.db
 
 # Compiled Program
 web-app-test
+
+# DB Manipulation Program
+manipulation/

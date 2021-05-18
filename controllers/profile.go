@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 	"log"
 	"web-app-test/database"
@@ -31,7 +30,7 @@ type ProfileController struct {
 func (c *ProfileController) ListProfile() {
 	// Fetch all user profiles
 	var profiles []models.Profile
-	database.Conn.Find(&profiles)
+	database.Conn.Preload("Hobbies").Find(&profiles)
 
 	// Render Form
 	c.Data["Form"] = &ProfileForm{}
@@ -45,8 +44,6 @@ func (c *ProfileController) ListProfile() {
 	c.Data["xsrf_token"] = c.XSRFToken()
 	c.Data["Xsrfdata"] = template.HTML(c.XSRFFormHTML())
 	c.Data["Results"] = profiles
-
-	fmt.Println(profiles)
 
 	if c.GetSession("success") == true {
 		c.Data["SuccessMessage"] = "Data has been successfully submitted/deleted!"
@@ -73,7 +70,7 @@ func (c *ProfileController) AddProfile() {
 
 	// Fetch all user profiles
 	var profiles []models.Profile
-	database.Conn.Find(&profiles)
+	database.Conn.Preload("Hobbies").Find(&profiles)
 	c.Data["Results"] = profiles
 
 	valid := validation.Validation{}
@@ -138,6 +135,7 @@ func (c *ProfileController) SubmitHobby() {
 	err := database.Conn.First(&profile, idProfile).Error
 	if err != nil {
 		log.Println("[Err] DB error on fetching profile with id = ", idProfile)
+		c.Abort("404")
 	}
 
 	// Templates
@@ -173,7 +171,12 @@ func (c *ProfileController) SubmitHobby() {
 		Hobby:     form.Hobby,
 		ProfileID: profile.ID,
 	}
-	database.Conn.Create(&newHobby)
+
+	err = database.Conn.Model(&profile).Association("Hobbies").Append(&newHobby)
+	if err != nil {
+		log.Println("[Err] Error while creating hobby entry: ", err.Error())
+		c.Abort("500")
+	}
 
 	c.SetSession("success", true)
 	c.Redirect("/profile", 302)
@@ -181,16 +184,32 @@ func (c *ProfileController) SubmitHobby() {
 
 func (c *ProfileController) DeleteProfile() {
 	id := c.Ctx.Input.Param(":idProfile")
-	err := database.Conn.Delete(&models.Profile{}, id).Error
+	profile := &models.Profile{}
+	err := database.Conn.First(&profile, id).Error
 	if err != nil {
-		log.Println("[Err] Error on deleting profile with id = ", id)
-		c.Abort("500")
+		log.Println("[Err] Error on fetching profile: ", err.Error())
+		c.Abort("404")
 	}
 
-	c.SetSession("success", false)
+	err = database.Conn.Select("Hobbies").Delete(&profile).Error
+	if err != nil {
+		log.Println("[Err] Error on deleting profile with id = ", id)
+		c.Abort("404")
+	}
+
+	c.SetSession("success", true)
 	c.Redirect("/profile", 302)
 }
 
 func (c *ProfileController) DeleteHobby() {
-	return
+	idHobby := c.Ctx.Input.Param(":idHobby")
+
+	err := database.Conn.Delete(&models.Hobby{}, idHobby).Error
+	if err != nil {
+		log.Println("[Err] Error while deleting data: ", err.Error())
+		c.Abort("500")
+	}
+
+	c.SetSession("success", true)
+	c.Redirect("/profile", 302)
 }
