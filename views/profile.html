@@ -50,7 +50,7 @@
                 {{if .Hobbies}}
                 <ul>
                     {{range .Hobbies}}
-                    <li>{{.Hobby}}
+                    <li>{{.Hobby}} -- <a href="{{urlfor "ProfileController.ShowUpdateHobby" ":idProfile" $idProfile ":idHobby" .ID}}">Update Hobby</a>
                         <span>
                             <form action="{{urlfor "ProfileController.DeleteHobby" ":idHobby" .ID ":idProfile" $idProfile}}" method="post">
                                 {{$.Xsrfdata}}
@@ -61,6 +61,7 @@
                     {{end}}
                 </ul>
                 {{end}}
+                <a href="{{urlfor "ProfileController.ShowUpdateProfile" ":idProfile" $idProfile}}" class="mb-2 btn btn-primary">Update Profile</a>
                 <a href="{{urlfor "ProfileController.AddHobby" ":idProfile" $idProfile}}" class="mb-2 btn btn-primary">Add Hobby</a>
                 <form action="{{urlfor "ProfileController.DeleteProfile" ":idProfile" $idProfile}}" method="post">
                     {{$.Xsrfdata}}

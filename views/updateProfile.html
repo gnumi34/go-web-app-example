@@ -1,0 +1,54 @@
+<div class="container">
+    <h1 class="mt-5 mb-3" style="text-align: center;">Update {{.Profile.Name}}'s Profile</h1>
+
+    {{if .ErrMessages}}
+    <div class="alert alert-danger" role="alert">
+        <ul>
+            {{range $key, $err := .ErrMessages}}
+            <li>{{$key}} {{$err}}</li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+
+    <form action="{{urlfor "ProfileController.UpdateProfile" ":idProfile" .Profile.ID}}" method="post" class="needs-validation" novalidate>
+        {{$.Xsrfdata}}
+        <div class="col-md-4">
+            <label for="name" class="form-label">Fullname</label>
+            <input name="name" type="text" class="form-control" id="name" value="{{.Profile.Name}}" required>
+            <div class="invalid-feedback">
+                Please enter your fullname!
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label for="age" class="form-label">Age</label>
+            <input name="age" type="text" class="form-control" id="age" value="{{.Profile.Age}}" required>
+            <div class="invalid-feedback">
+                Please enter your age!
+            </div>
+        </div>
+        <input type="submit" class="mt-2 btn btn-primary" value="Submit">
+    </form>
+
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+    'use strict'
+
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+        }, false)
+        })
+    })()
+</script>

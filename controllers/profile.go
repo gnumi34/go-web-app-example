@@ -32,9 +32,6 @@ func (c *ProfileController) ListProfile() {
 	var profiles []models.Profile
 	database.Conn.Preload("Hobbies").Find(&profiles)
 
-	// Render Form
-	c.Data["Form"] = &ProfileForm{}
-
 	// Render Template
 	c.Layout = "base/base.html"
 	c.TplName = "profile.html"
@@ -66,7 +63,6 @@ func (c *ProfileController) AddProfile() {
 		log.Println("[Err] Error on AddProfile : ", err.Error())
 		c.Abort("500")
 	}
-	c.Data["Form"] = form
 
 	// Fetch all user profiles
 	var profiles []models.Profile
@@ -167,6 +163,14 @@ func (c *ProfileController) SubmitHobby() {
 		return
 	}
 
+	checkHobby := models.Hobby{}
+	if !errors.Is((database.Conn.Where("hobby = ? AND profile_id = ?", form.Hobby, profile.ID).First(&checkHobby)).Error, gorm.ErrRecordNotFound) {
+		log.Println("[Err] Error on SubmitHobby : ", "Duplicate Name")
+		errMessages["Error on"] = " duplicate entry!"
+		c.Data["ErrMessages"] = errMessages
+		return
+	}
+
 	newHobby := models.Hobby{
 		Hobby:     form.Hobby,
 		ProfileID: profile.ID,
@@ -184,7 +188,7 @@ func (c *ProfileController) SubmitHobby() {
 
 func (c *ProfileController) DeleteProfile() {
 	id := c.Ctx.Input.Param(":idProfile")
-	profile := &models.Profile{}
+	profile := models.Profile{}
 	err := database.Conn.First(&profile, id).Error
 	if err != nil {
 		log.Println("[Err] Error on fetching profile: ", err.Error())
@@ -212,4 +216,187 @@ func (c *ProfileController) DeleteHobby() {
 
 	c.SetSession("success", true)
 	c.Redirect("/profile", 302)
+}
+
+func (c *ProfileController) ShowUpdateProfile() {
+	// Fetch profile
+	idProfile := c.Ctx.Input.Param("idProfile")
+	profile := models.Profile{}
+
+	err := database.Conn.First(&profile, idProfile).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	// Render Template
+	c.Layout = "base/base.html"
+	c.TplName = "updateProfile.html"
+	c.LayoutSections = make(map[string]string)
+	c.LayoutSections["Footer"] = "base/footer.html"
+	c.LayoutSections["Header"] = "base/header.html"
+	c.Data["xsrf_token"] = c.XSRFToken()
+	c.Data["Xsrfdata"] = template.HTML(c.XSRFFormHTML())
+	c.Data["Profile"] = profile
+}
+
+func (c *ProfileController) UpdateProfile() {
+	// Fetch profile
+	idProfile := c.Ctx.Input.Param("idProfile")
+	profile := models.Profile{}
+
+	err := database.Conn.First(&profile, idProfile).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	// Render Template
+	c.Layout = "base/base.html"
+	c.TplName = "updateProfile.html"
+	c.LayoutSections = make(map[string]string)
+	c.LayoutSections["Footer"] = "base/footer.html"
+	c.LayoutSections["Header"] = "base/header.html"
+	c.Data["xsrf_token"] = c.XSRFToken()
+	c.Data["Xsrfdata"] = template.HTML(c.XSRFFormHTML())
+	c.Data["Profile"] = profile
+
+	form := ProfileForm{}
+	if err := c.ParseForm(&form); err != nil {
+		log.Println("[Err] Error on UpdateProfile : ", err.Error())
+		c.Abort("500")
+	}
+
+	valid := validation.Validation{}
+	valid.Required(form.Name, "Name").Message("is required")
+	valid.Required(form.Age, "Age").Message("is required")
+
+	errMessages := make(map[string]string)
+	if valid.HasErrors() {
+		for _, err := range valid.Errors {
+			log.Println("[FormEror] ", err.Key, " : ", err.Message)
+			errMessages[err.Key] = err.Message
+		}
+		c.Data["ErrMessages"] = errMessages
+		return
+	}
+
+	checkProfile := models.Profile{}
+	if !errors.Is((database.Conn.Where("name = ?", form.Name).First(&checkProfile)).Error, gorm.ErrRecordNotFound) {
+		log.Println("[Err] Error on UpdateProfile : ", "Duplicate Name")
+		errMessages["Error on"] = " duplicate entry!"
+		c.Data["ErrMessages"] = errMessages
+		return
+	}
+
+	profile.Name = form.Name
+	profile.Age = form.Age
+	err = database.Conn.Save(&profile).Error
+	if err != nil {
+		log.Println("[Err] Error while updating data: ", err.Error())
+		c.Abort("500")
+	}
+
+	c.SetSession("success", true)
+	c.Redirect("/profile", 302)
+}
+
+func (c *ProfileController) ShowUpdateHobby() {
+	// Fetch Profile and Hobby
+	idProfile := c.Ctx.Input.Param(":idProfile")
+	idHobby := c.Ctx.Input.Param(":idHobby")
+	profile := models.Profile{}
+	hobby := models.Hobby{}
+
+	err := database.Conn.First(&profile, idProfile).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	err = database.Conn.First(&hobby, idHobby).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	// Render Template
+	c.Layout = "base/base.html"
+	c.TplName = "updateHobby.html"
+	c.LayoutSections = make(map[string]string)
+	c.LayoutSections["Footer"] = "base/footer.html"
+	c.LayoutSections["Header"] = "base/header.html"
+	c.Data["xsrf_token"] = c.XSRFToken()
+	c.Data["Xsrfdata"] = template.HTML(c.XSRFFormHTML())
+	c.Data["Profile"] = profile
+	c.Data["Hobby"] = hobby
+}
+
+func (c *ProfileController) UpdateHobby() {
+	// Fetch Profile and Hobby
+	idProfile := c.Ctx.Input.Param(":idProfile")
+	idHobby := c.Ctx.Input.Param(":idHobby")
+	profile := models.Profile{}
+	hobby := models.Hobby{}
+
+	err := database.Conn.First(&profile, idProfile).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	err = database.Conn.First(&hobby, idHobby).Error
+	if err != nil {
+		log.Println("[Err] Err while fetching data: ", err.Error())
+		c.Abort("404")
+	}
+
+	// Render Template
+	c.Layout = "base/base.html"
+	c.TplName = "updateHobby.html"
+	c.LayoutSections = make(map[string]string)
+	c.LayoutSections["Footer"] = "base/footer.html"
+	c.LayoutSections["Header"] = "base/header.html"
+	c.Data["xsrf_token"] = c.XSRFToken()
+	c.Data["Xsrfdata"] = template.HTML(c.XSRFFormHTML())
+	c.Data["Profile"] = profile
+	c.Data["Hobby"] = hobby
+
+	form := HobbyForm{}
+	if err := c.ParseForm(&form); err != nil {
+		log.Println("[Err] Error on UpdateHobby : ", err.Error())
+		c.Abort("500")
+	}
+
+	valid := validation.Validation{}
+	valid.Required(form.Hobby, "Name").Message("is required")
+
+	errMessages := make(map[string]string)
+	if valid.HasErrors() {
+		for _, err := range valid.Errors {
+			log.Println("[FormEror] ", err.Key, " : ", err.Message)
+			errMessages[err.Key] = err.Message
+		}
+		c.Data["ErrMessages"] = errMessages
+		return
+	}
+
+	checkHobby := models.Hobby{}
+	if !errors.Is((database.Conn.Where("hobby = ? AND profile_id = ?", form.Hobby, profile.ID).First(&checkHobby)).Error, gorm.ErrRecordNotFound) {
+		log.Println("[Err] Error on UpdateHobby : ", "Duplicate Name")
+		errMessages["Error on"] = " duplicate entry!"
+		c.Data["ErrMessages"] = errMessages
+		return
+	}
+
+	hobby.Hobby = form.Hobby
+	err = database.Conn.Save(&hobby).Error
+	if err != nil {
+		log.Println("[Err] Error while updating data: ", err.Error())
+		c.Abort("500")
+	}
+
+	c.SetSession("success", true)
+	c.Redirect("/profile", 302)
+
 }
