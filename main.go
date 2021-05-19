@@ -10,7 +10,16 @@ import (
 
 func main() {
 	database.Connect()
-	err := database.Conn.AutoMigrate(&models.Profile{}, &models.Hobby{})
+	dbConnector, err := database.Conn.DB()
+
+	if err != nil {
+		panic("Error while assigning connector!")
+	}
+
+	defer dbConnector.Close()
+
+	err = database.Conn.AutoMigrate(&models.Profile{}, &models.Hobby{})
+
 	if err != nil {
 		panic(err.Error())
 	}
