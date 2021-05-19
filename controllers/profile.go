@@ -102,7 +102,7 @@ func (c *ProfileController) AddProfile() {
 }
 
 func (c *ProfileController) AddHobby() {
-	idProfile := c.Ctx.Input.Param(":idProfile")
+	idProfile, _ := c.GetInt(":idProfile")
 	profile := models.Profile{}
 
 	err := database.Conn.First(&profile, idProfile).Error
@@ -125,7 +125,7 @@ func (c *ProfileController) AddHobby() {
 }
 
 func (c *ProfileController) SubmitHobby() {
-	idProfile := c.Ctx.Input.Param(":idProfile")
+	idProfile, _ := c.GetInt(":idProfile")
 	profile := models.Profile{}
 
 	err := database.Conn.First(&profile, idProfile).Error
@@ -187,7 +187,7 @@ func (c *ProfileController) SubmitHobby() {
 }
 
 func (c *ProfileController) DeleteProfile() {
-	id := c.Ctx.Input.Param(":idProfile")
+	id, _ := c.GetInt(":idProfile")
 	profile := models.Profile{}
 	err := database.Conn.First(&profile, id).Error
 	if err != nil {
@@ -206,7 +206,7 @@ func (c *ProfileController) DeleteProfile() {
 }
 
 func (c *ProfileController) DeleteHobby() {
-	idHobby := c.Ctx.Input.Param(":idHobby")
+	idHobby, _ := c.GetInt(":idHobby")
 
 	err := database.Conn.Delete(&models.Hobby{}, idHobby).Error
 	if err != nil {
@@ -220,7 +220,7 @@ func (c *ProfileController) DeleteHobby() {
 
 func (c *ProfileController) ShowUpdateProfile() {
 	// Fetch profile
-	idProfile := c.Ctx.Input.Param("idProfile")
+	idProfile, _ := c.GetInt("idProfile")
 	profile := models.Profile{}
 
 	err := database.Conn.First(&profile, idProfile).Error
@@ -242,7 +242,7 @@ func (c *ProfileController) ShowUpdateProfile() {
 
 func (c *ProfileController) UpdateProfile() {
 	// Fetch profile
-	idProfile := c.Ctx.Input.Param("idProfile")
+	idProfile, _ := c.GetInt("idProfile")
 	profile := models.Profile{}
 
 	err := database.Conn.First(&profile, idProfile).Error
@@ -303,8 +303,8 @@ func (c *ProfileController) UpdateProfile() {
 
 func (c *ProfileController) ShowUpdateHobby() {
 	// Fetch Profile and Hobby
-	idProfile := c.Ctx.Input.Param(":idProfile")
-	idHobby := c.Ctx.Input.Param(":idHobby")
+	idProfile, _ := c.GetInt(":idProfile")
+	idHobby, _ := c.GetInt(":idHobby")
 	profile := models.Profile{}
 	hobby := models.Hobby{}
 
@@ -334,8 +334,8 @@ func (c *ProfileController) ShowUpdateHobby() {
 
 func (c *ProfileController) UpdateHobby() {
 	// Fetch Profile and Hobby
-	idProfile := c.Ctx.Input.Param(":idProfile")
-	idHobby := c.Ctx.Input.Param(":idHobby")
+	idProfile, _ := c.GetInt(":idProfile")
+	idHobby, _ := c.GetInt(":idHobby")
 	profile := models.Profile{}
 	hobby := models.Hobby{}
 
